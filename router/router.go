@@ -11,5 +11,6 @@ func GetRouter(h *handler.Handler) *gin.Engine {
 	router.POST("/commission-profile", h.CreateCommissionProfile)
 	router.PUT("/commission-profile", h.UpdateCommissionProfile)
 	router.PUT("/commission-rules", h.UpdateCommissionRules)
+	router.GET("/commission-profiles", h.GetAllCommissionProfiles)
 	return router
 }

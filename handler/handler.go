@@ -6,6 +6,7 @@ import (
 	"main/db"
 	"main/models"
 	"net/http"
+	"strconv"
 	"time"
 )
 
@@ -115,5 +116,40 @@ func (h *Handler) UpdateCommissionRules(c *gin.Context) {
 	c.JSON(http.StatusOK, updateRules)
 }
 
-func (h *Handler) GetAllProfiles(c *gin.Context) {
+func (h *Handler) GetAllCommissionProfiles(c *gin.Context) {
+	dateFrom := c.Query("dateFrom")
+	dateTo := c.Query("dateTo")
+	strPage := c.Query("page")
+	strLimit := c.Query("limit")
+	profileName := c.Query("profileName")
+	limit, err := strconv.Atoi(strLimit)
+	if err != nil {
+		log.Println(err)
+	}
+	page, err := strconv.Atoi(strPage)
+	if err != nil {
+		log.Println(err)
+	}
+	offset, limit := makePagination(page, limit)
+	allProfiles, count, err := h.Repos.AllProfiles(dateFrom, dateTo, profileName, limit, offset)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"message:": "Can't get all profiles error:" + err.Error()})
+		return
+	}
+	response := struct {
+		Profiles []models.ProfileResponse
+		Total    int64
+	}{allProfiles, *count}
+
+	c.JSON(http.StatusOK, response)
+}
+
+func makePagination(page, limit int) (int, int) {
+	if limit < 1 {
+		limit = 1
+	}
+	if page < 1 {
+		page = 1
+	}
+	return (page - 1) * limit, limit
 }

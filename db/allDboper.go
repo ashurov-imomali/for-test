@@ -3,6 +3,7 @@ package db
 import (
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
+	"log"
 	"main/models"
 	"time"
 )
@@ -139,4 +140,30 @@ func (r *Repository) DeleteProfileAndRules(request *models.ProfileCreatRequest) 
 	}
 	tx.Commit()
 	return nil
+}
+
+func (r *Repository) AllProfiles(dateFrom, dateTo, profileName string, limit, offset int) ([]models.ProfileResponse, *int64, error) {
+	var profiles []models.ProfileResponse
+
+	query := r.Db.Where("active = ?", true).Table("tcomission_profiles t").
+		Select("t.*, uc.fullname as creater_name, uu.fullname as updater_name").
+		Joins("join tusers uc on t.created_by = uc.user_id left join tusers uu on t.updated_by = uu.user_id")
+	var count int64
+	err := query.Count(&count).Error
+	if err != nil {
+		log.Println(err)
+		return nil, nil, err
+	}
+	if profileName != "" {
+		query = query.Where("lower(name) like ?", "%"+profileName+"%")
+	}
+
+	if dateFrom != "" && dateTo != "" {
+		query = query.Where("created_at >= ? and created_at <= ?", dateFrom, dateTo)
+	}
+
+	if err := query.Limit(limit).Offset(offset).Scan(&profiles).Error; err != nil {
+		return nil, nil, err
+	}
+	return profiles, &count, nil
 }

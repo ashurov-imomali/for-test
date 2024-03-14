@@ -54,3 +54,9 @@ type ProfileCreatRequest struct {
 	Profile CommissionProfiles `json:"profile"`
 	Rules   []CommissionRules  `json:"rules"`
 }
+
+type ProfileResponse struct {
+	CommissionProfiles `json:"commission_profiles"`
+	UpdaterName        string `json:"updated_by"`
+	CreaterName        string `json:"created_by"`
+}
